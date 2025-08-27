@@ -1,0 +1,13 @@
+.home {
+    min-height: 100vh;
+    background-color: var(--color-background-secondary);
+}
+
+.container {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 20px;
+    padding: 20px;
+    align-items: flex-start;
+}

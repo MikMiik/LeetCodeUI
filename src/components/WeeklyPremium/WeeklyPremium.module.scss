@@ -1,0 +1,77 @@
+.weeklyPremium {
+    background: var(--color-text-inverse);
+    border-radius: 8px;
+    border: 1px solid var(--color-border-medium);
+    padding: 16px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        margin: 0;
+    }
+}
+
+.info {
+    font-size: 14px;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+}
+
+.daysLeft {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    margin-bottom: 16px;
+}
+
+.weekGrid {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.weekDay {
+    flex: 1;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-background-tertiary);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-tertiary);
+
+    &.completed {
+        background: var(--color-secondary);
+        color: var(--color-text-inverse);
+    }
+}
+
+.redeem {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+.redeemIcon {
+    font-size: 16px;
+    color: var(--color-text-secondary);
+}
+
+.rules {
+    font-size: 12px;
+    color: var(--color-text-tertiary);
+    cursor: pointer;
+    text-decoration: underline;
+}

@@ -1,0 +1,581 @@
+.demo {
+    min-height: 100vh;
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    padding: 2rem;
+
+    .header {
+        text-align: center;
+        margin-bottom: 2rem;
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+
+            svg {
+                color: var(--color-accent);
+            }
+        }
+
+        p {
+            color: var(--color-text-secondary);
+            font-size: 1.1rem;
+        }
+    }
+
+    .content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+
+        @media (max-width: 1024px) {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+    }
+
+    .leftPanel {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .rightPanel {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .editorSection,
+    .inputSection,
+    .testCasesSection,
+    .resultSection,
+    .testResultsSection {
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+
+        h3 {
+            margin: 0 0 1rem 0;
+            color: var(--color-text-primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            svg {
+                color: var(--color-primary);
+            }
+        }
+
+        h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--color-text-primary);
+            font-size: 1rem;
+            font-weight: 500;
+        }
+    }
+
+    .codeEditor {
+        width: 100%;
+        min-height: 400px;
+        padding: 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        resize: vertical;
+        transition: border-color 0.2s ease;
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        &::placeholder {
+            color: var(--color-text-tertiary);
+        }
+    }
+
+    .inputArea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        background: var(--color-background);
+        color: var(--color-text-primary);
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 14px;
+        line-height: 1.4;
+        resize: vertical;
+        transition: border-color 0.2s ease;
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        &::placeholder {
+            color: var(--color-text-tertiary);
+        }
+    }
+
+    .testCasesTabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .testCaseTab {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--color-border);
+        background: var(--color-background);
+        color: var(--color-text-secondary);
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+            border-color: var(--color-primary);
+            color: var(--color-text-primary);
+        }
+
+        &.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+    }
+
+    .testCaseContent {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .testCaseDescription {
+        margin: 0;
+        color: var(--color-text-secondary);
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    .testCaseInput,
+    .testCaseExpected {
+        h4 {
+            margin: 0 0 0.5rem 0;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+    }
+
+    .testCaseTextarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: 4px;
+        background: var(--color-background-secondary);
+        color: var(--color-text-primary);
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.8rem;
+        line-height: 1.4;
+        resize: none;
+        cursor: text;
+
+        &:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+    }
+
+    .submitSection {
+        display: flex;
+        justify-content: center;
+    }
+
+    .submitButtons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .submitBtn {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+        min-width: 140px;
+        justify-content: center;
+
+        &:hover:not(:disabled) {
+            background: var(--color-primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        &:disabled {
+            background: var(--color-border);
+            color: var(--color-text-tertiary);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        svg {
+            font-size: 0.9rem;
+        }
+
+        &.testAllBtn {
+            background: var(--color-secondary);
+
+            &:hover:not(:disabled) {
+                background: var(--color-secondary-hover);
+            }
+        }
+    }
+
+    .submissionInfo {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: var(--color-background);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 0.875rem;
+
+        p {
+            margin: 0;
+            color: var(--color-text-secondary);
+        }
+    }
+
+    .result {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .status {
+        display: flex;
+        justify-content: center;
+    }
+
+    .statusBadge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+
+        &.green {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        &.red {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        &.orange {
+            background: rgba(249, 115, 22, 0.1);
+            color: #f97316;
+            border: 1px solid rgba(249, 115, 22, 0.3);
+        }
+
+        &.gray {
+            background: rgba(107, 114, 128, 0.1);
+            color: #6b7280;
+            border: 1px solid rgba(107, 114, 128, 0.3);
+        }
+    }
+
+    .output,
+    .error,
+    .compileError {
+        h4 {
+            margin-bottom: 0.5rem;
+        }
+
+        pre {
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 0;
+            overflow-x: auto;
+            font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+            font-size: 0.875rem;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    }
+
+    .output {
+        h4 {
+            color: var(--color-success);
+        }
+    }
+
+    .error,
+    .compileError {
+        h4 {
+            color: var(--color-error);
+        }
+
+        pre {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+    }
+
+    .metrics {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .metric {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--color-background);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-size: 0.875rem;
+
+        svg {
+            color: var(--color-primary);
+            font-size: 0.8rem;
+        }
+
+        span {
+            color: var(--color-text-secondary);
+            font-weight: 500;
+        }
+    }
+
+    .placeholder {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--color-text-tertiary);
+
+        p {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+    }
+
+    // Test Results Styling
+    .testResultsSection {
+        margin-top: 1.5rem;
+    }
+
+    .testResultsSummary {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: var(--color-background);
+        border: 1px solid var(--color-border);
+        border-radius: 6px;
+        font-weight: 600;
+
+        .passed {
+            color: var(--color-success);
+        }
+
+        .failed {
+            color: var(--color-error);
+        }
+
+        .total {
+            color: var(--color-text-secondary);
+        }
+    }
+
+    .testResultsList {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .testResultItem {
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: border-color 0.2s ease;
+
+        &.passed {
+            border-left: 4px solid var(--color-success);
+        }
+
+        &.failed {
+            border-left: 4px solid var(--color-error);
+        }
+    }
+
+    .testResultHeader {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: var(--color-background);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .testResultIcon {
+        font-size: 0.9rem;
+
+        .passed & {
+            color: var(--color-success);
+        }
+
+        .failed & {
+            color: var(--color-error);
+        }
+    }
+
+    .testResultTitle {
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    .testResultStatus {
+        margin-left: auto;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+
+        .passed & {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--color-success);
+        }
+
+        .failed & {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--color-error);
+        }
+    }
+
+    .testResultDetails {
+        padding: 1rem;
+    }
+
+    .testResultDescription {
+        margin: 0 0 1rem 0;
+        color: var(--color-text-secondary);
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    .testResultIO {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+
+        @media (min-width: 768px) {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+    }
+
+    .testInput,
+    .testExpected,
+    .testActual,
+    .testError {
+        strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        pre {
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+            padding: 0.5rem;
+            margin: 0;
+            font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    }
+
+    .testExpected strong {
+        color: var(--color-primary);
+    }
+
+    .testActual strong {
+        color: var(--color-success);
+    }
+
+    .testError {
+        strong {
+            color: var(--color-error);
+        }
+
+        pre {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.05);
+        }
+    }
+
+    .testMetrics {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: var(--color-text-secondary);
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--color-border);
+
+        span {
+            padding: 0.25rem 0.5rem;
+            background: var(--color-background);
+            border: 1px solid var(--color-border);
+            border-radius: 4px;
+        }
+    }
+}

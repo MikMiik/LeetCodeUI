@@ -1,0 +1,16 @@
+@import "../Demo/Demo.module.scss";
+
+.editorBox, .testCasesBox {
+  background: var(--color-background-tertiary);
+  border-radius: var(--radius-base);
+  min-height: 120px;
+  padding: 16px;
+  color: var(--color-text-tertiary);
+  font-family: var(--font-family-mono);
+  font-size: 1rem;
+}
+
+.detailBox {
+  margin-top: 24px;
+  color: var(--color-text-secondary);
+}
