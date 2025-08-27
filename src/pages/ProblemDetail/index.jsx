@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlay,
-  faCode,
   faSpinner,
   faCheckCircle,
   faExclamationTriangle,
@@ -13,6 +12,7 @@ import {
   faList,
   faClipboardList,
 } from "@fortawesome/free-solid-svg-icons";
+import Header from "../../components/Header";
 import { API_CONFIG } from "../../configs/api";
 import styles from "./ProblemDetail.module.scss";
 
@@ -332,14 +332,7 @@ const ProblemDetail = () => {
 
   return (
     <div className={styles.demo}>
-      <div className={styles.header}>
-        <h1>
-          <FontAwesomeIcon icon={faCode} />
-          API Demo - Code Execution
-        </h1>
-        <p>Test the LeetCode API with JavaScript code execution</p>
-      </div>
-
+      <Header />
       <div className={styles.content}>
         <div className={styles.leftPanel}>
           <div className={styles.editorSection}>
