@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MonacoEditor from "@monaco-editor/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPlay,
@@ -14,9 +15,16 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Header from "../../components/Header";
 import { API_CONFIG } from "../../configs/api";
+import { useGetProblemQuery } from "../../api/problemApi";
 import styles from "./ProblemDetail.module.scss";
 
+// TODO: Lấy id từ router (ví dụ: useParams nếu dùng react-router)
+const problemId = 1; // Hardcode tạm, cần thay bằng lấy từ URL
+
 const ProblemDetail = () => {
+  // Lấy dữ liệu problem từ API
+  const { data: problem, isSuccess: isSuccessProblem } =
+    useGetProblemQuery(problemId);
   const [code, setCode] = useState(
     `// JavaScript Demo Code - Two Sum Problem\nfunction twoSum(nums, target) {\n    const map = new Map();\n    \n    for (let i = 0; i < nums.length; i++) {\n        const complement = target - nums[i];\n        \n        if (map.has(complement)) {\n            return [map.get(complement), i];\n        }\n        \n        map.set(nums[i], i);\n    }\n    \n    return [];\n}\n\n// Read input from stdin\nconst input = require('fs').readFileSync(0, 'utf8').trim().split('\\n');\nconst nums = JSON.parse(input[0]);\nconst target = parseInt(input[1]);\n\n// Execute and print result\nconst result = twoSum(nums, target);\nconsole.log(JSON.stringify(result));`
   );
@@ -31,50 +39,13 @@ const ProblemDetail = () => {
 
   const API_BASE_URL = API_CONFIG.BASE_URL;
 
-  // Test cases for Two Sum problem
-  const testCases = [
-    {
-      id: 1,
-      input: `[2,7,11,15]\n9`,
-      expected: "[0,1]",
-      description: "Basic case: nums = [2,7,11,15], target = 9",
-    },
-    {
-      id: 2,
-      input: `[3,2,4]\n6`,
-      expected: "[1,2]",
-      description: "Different indices: nums = [3,2,4], target = 6",
-    },
-    {
-      id: 3,
-      input: `[3,3]\n6`,
-      expected: "[0,1]",
-      description: "Duplicate numbers: nums = [3,3], target = 6",
-    },
-    {
-      id: 4,
-      input: `[1,2,3,4,5]\n8`,
-      expected: "[2,4]",
-      description: "Larger array: nums = [1,2,3,4,5], target = 8",
-    },
-    {
-      id: 5,
-      input: `[2,5,5,11]\n10`,
-      expected: "[1,2]",
-      description: "Multiple same numbers: nums = [2,5,5,11], target = 10",
-    },
-    {
-      id: 6,
-      input: `[1,2,3,4,5]\n9`,
-      expected: "[3,4]",
-      description: "Larger array: nums = [1,2,3,4,5], target = 9",
-    },
-  ];
+  // Test cases lấy từ backend nếu có, fallback []
+  const testCases = problem && problem.testCases ? problem.testCases : [];
 
   // Handle test case selection
   const handleTestCaseSelect = (index) => {
     setSelectedTestCase(index);
-    setInput(testCases[index].input);
+    setInput(testCases[index]?.input || "");
   };
 
   // Run all test cases
@@ -336,18 +307,23 @@ const ProblemDetail = () => {
       <div className={styles.content}>
         <div className={styles.leftPanel}>
           <div className={styles.editorSection}>
-            <h3>JavaScript Code Editor</h3>
+            <h3>Problem</h3>
+            {/* Hiển thị trạng thái lấy problem */}
+            {isSuccessProblem && problem && (
+              <div style={{ marginBottom: 12 }}>
+                <div>
+                  <strong>{problem.title}</strong>
+                </div>
+              </div>
+            )}
             <textarea
               className={styles.codeEditor}
-              value={code}
+              value={isSuccessProblem && problem.description}
               onChange={(e) => setCode(e.target.value)}
               placeholder="Enter your JavaScript code here..."
               spellCheck="false"
             />
           </div>
-        </div>
-
-        <div className={styles.rightPanel}>
           <div className={styles.resultSection}>
             <h3>Execution Result</h3>
 
@@ -431,6 +407,34 @@ const ProblemDetail = () => {
               rows="4"
             />
           </div>
+        </div>
+
+        <div className={styles.rightPanel}>
+          {/* Monaco Editor bổ sung */}
+          <div className={styles.monacoEditorBox}>
+            <MonacoEditor
+              height="100%"
+              defaultLanguage="javascript"
+              theme="vs-dark"
+              value={code}
+              onChange={(value) => setCode(value)}
+              options={{
+                fontSize: 16,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: "on",
+                automaticLayout: true,
+                lineNumbers: "on",
+                tabSize: 2,
+                fontFamily: "Fira Mono, monospace",
+                smoothScrolling: true,
+                scrollbar: {
+                  vertical: "auto",
+                  horizontal: "auto",
+                },
+              }}
+            />
+          </div>
 
           <div className={styles.testCasesSection}>
             <h3>
@@ -440,39 +444,41 @@ const ProblemDetail = () => {
             <div className={styles.testCasesTabs}>
               {testCases.map((testCase, index) => (
                 <button
-                  key={testCase.id}
+                  key={index}
                   className={`${styles.testCaseTab} ${
                     selectedTestCase === index ? styles.active : ""
                   }`}
                   onClick={() => handleTestCaseSelect(index)}
                 >
-                  Case {testCase.id}
+                  Case {index + 1}
                 </button>
               ))}
             </div>
-            <div className={styles.testCaseContent}>
-              <p className={styles.testCaseDescription}>
-                {testCases[selectedTestCase].description}
-              </p>
-              <div className={styles.testCaseInput}>
-                <h4>Input:</h4>
-                <textarea
-                  className={styles.testCaseTextarea}
-                  value={testCases[selectedTestCase].input}
-                  readOnly
-                  rows="3"
-                />
+            {testCases[selectedTestCase] && (
+              <div className={styles.testCaseContent}>
+                <div className={styles.testCaseInput}>
+                  <h4>Input:</h4>
+                  <textarea
+                    className={styles.testCaseTextarea}
+                    value={testCases[selectedTestCase].input || ""}
+                    readOnly
+                  />
+                </div>
+                <div className={styles.testCaseExpected}>
+                  <h4>Expected Output:</h4>
+                  <textarea
+                    className={styles.testCaseTextarea}
+                    value={testCases[selectedTestCase].expectedOutput || ""}
+                    readOnly
+                  />
+                </div>
+                {testCases[selectedTestCase].explanation && (
+                  <p className={styles.testCaseDescription}>
+                    Explanation: {testCases[selectedTestCase].explanation}
+                  </p>
+                )}
               </div>
-              <div className={styles.testCaseExpected}>
-                <h4>Expected Output:</h4>
-                <textarea
-                  className={styles.testCaseTextarea}
-                  value={testCases[selectedTestCase].expected}
-                  readOnly
-                  rows="1"
-                />
-              </div>
-            </div>
+            )}
           </div>
 
           <div className={styles.submitSection}>
