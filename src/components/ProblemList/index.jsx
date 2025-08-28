@@ -3,21 +3,38 @@ import ProblemItem from "../ProblemItem";
 import styles from "./ProblemList.module.scss";
 import { useGetAllProblemsQuery } from "../../api/problemApi";
 
-const ProblemList = ({ activeTag }) => {
+const ProblemList = ({ activeTags, activeDifficulty, searchTerm }) => {
   const { data: problems, isLoading, isError } = useGetAllProblemsQuery();
 
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error loading problems.</div>;
   if (!problems || problems.length === 0) return <div>No problems found.</div>;
 
-  // Lọc theo tag nếu có
-  const filteredProblems = activeTag
-    ? problems.filter(
-        (problem) =>
-          Array.isArray(problem.tags) &&
-          problem.tags.some((tag) => tag.id === activeTag)
-      )
-    : problems;
+  // Lọc theo nhiều tag, độ khó và search title nếu có
+  let filteredProblems = problems;
+  if (activeTags && activeTags.length > 0) {
+    filteredProblems = filteredProblems.filter(
+      (problem) =>
+        Array.isArray(problem.tags) &&
+        activeTags.every((tagId) =>
+          problem.tags.some((tag) => tag.id === tagId)
+        )
+    );
+  }
+  if (activeDifficulty) {
+    filteredProblems = filteredProblems.filter(
+      (problem) =>
+        problem.difficulty &&
+        problem.difficulty.toLowerCase() === activeDifficulty
+    );
+  }
+  if (searchTerm && searchTerm.trim() !== "") {
+    const lowerSearch = searchTerm.trim().toLowerCase();
+    filteredProblems = filteredProblems.filter(
+      (problem) =>
+        problem.title && problem.title.toLowerCase().includes(lowerSearch)
+    );
+  }
 
   return (
     <div className={styles.problemList}>
@@ -35,7 +52,14 @@ const ProblemList = ({ activeTag }) => {
 };
 
 ProblemList.propTypes = {
-  activeTag: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  activeTags: PropTypes.arrayOf(
+    PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  ).isRequired,
+  activeDifficulty: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.oneOf([null]),
+  ]),
+  searchTerm: PropTypes.string.isRequired,
 };
 
 export default ProblemList;

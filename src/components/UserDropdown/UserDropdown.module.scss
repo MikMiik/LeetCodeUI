@@ -10,17 +10,12 @@
     border: none;
     cursor: pointer;
     padding: var(--spacing-1);
-    border-radius: var(--radius-full);
     transition: var(--transition-base);
 
     &:hover {
         background-color: var(--color-surface-secondary);
     }
 
-    &:focus {
-        outline: 2px solid var(--color-primary);
-        outline-offset: 2px;
-    }
 }
 
 .avatar {

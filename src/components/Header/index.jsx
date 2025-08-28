@@ -5,6 +5,7 @@ import Icon from "../Icon";
 import { useTheme } from "../../hooks/useTheme";
 import { ROUTES } from "../../configs/routes";
 import styles from "./Header.module.scss";
+import { useSelector } from "react-redux";
 
 const Header = () => {
   const { setTheme } = useTheme();
@@ -12,6 +13,8 @@ const Header = () => {
   const handleThemeChange = (theme) => {
     setTheme(theme);
   };
+  const currentUser = useSelector((state) => state.auth?.currentUser);
+  console.log(currentUser);
 
   // Lấy pathname để set active nav
   const pathname = window.location.pathname;
@@ -48,12 +51,27 @@ const Header = () => {
           <div className={styles.streak}>
             <Icon name="fire" size="sm" /> 0
           </div>
-          <UserDropdown
-            userAvatar="/user-profile-avatar.png"
-            userName="LeetCode User"
-            onThemeChange={handleThemeChange}
-          />
-          <Button variant="premium">Premium</Button>
+          {currentUser ? (
+            <>
+              <UserDropdown
+                userAvatar={
+                  currentUser.avatar || "/src/assets/placeholder-user.jpg"
+                }
+                userName={currentUser.name || "LeetCode User"}
+                onThemeChange={handleThemeChange}
+              />
+              <Button variant="premium">Premium</Button>
+            </>
+          ) : (
+            <>
+              <Button as={Link} to={ROUTES.LOGIN} variant="primary">
+                Login
+              </Button>
+              <Button as={Link} to={ROUTES.REGISTER} variant="secondary">
+                Register
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

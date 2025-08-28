@@ -1,42 +1,38 @@
-import { useState } from "react";
-import Icon from "../Icon";
+import PropTypes from "prop-types";
+
 import styles from "./CategoryTabs.module.scss";
 
-const CategoryTabs = () => {
-    const [activeTab, setActiveTab] = useState("JavaScript");
+const DIFFICULTY_TABS = [
+  { name: "All", value: null },
+  { name: "Easy", value: "easy" },
+  { name: "Medium", value: "medium" },
+  { name: "Hard", value: "hard" },
+];
 
-    const tabs = [
-        { name: "All Topics", icon: "clipboard-list" },
-        { name: "Algorithms", icon: "cog" },
-        { name: "Database", icon: "database" },
-        { name: "Shell", icon: "terminal" },
-        { name: "Concurrency", icon: "bolt" },
-        { name: "JavaScript", icon: "code", text: "JS" },
-        { name: "pandas", icon: "chart-bar" },
-    ];
+const CategoryTabs = ({ activeDifficulty, setActiveDifficulty }) => {
+  return (
+    <div className={styles.categoryTabs}>
+      {DIFFICULTY_TABS.map((tab) => (
+        <button
+          key={tab.name}
+          className={`${styles.tab} ${
+            activeDifficulty === tab.value ? styles.active : ""
+          }`}
+          onClick={() => setActiveDifficulty(tab.value)}
+        >
+          <span className={styles.name}>{tab.name}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
 
-    return (
-        <div className={styles.categoryTabs}>
-            {tabs.map((tab) => (
-                <button
-                    key={tab.name}
-                    className={`${styles.tab} ${
-                        activeTab === tab.name ? styles.active : ""
-                    }`}
-                    onClick={() => setActiveTab(tab.name)}
-                >
-                    <span className={styles.icon}>
-                        {tab.text ? (
-                            tab.text
-                        ) : (
-                            <Icon name={tab.icon} size="sm" />
-                        )}
-                    </span>
-                    <span className={styles.name}>{tab.name}</span>
-                </button>
-            ))}
-        </div>
-    );
+CategoryTabs.propTypes = {
+  activeDifficulty: PropTypes.oneOfType([
+    PropTypes.string,
+    PropTypes.oneOf([null]),
+  ]),
+  setActiveDifficulty: PropTypes.func.isRequired,
 };
 
 export default CategoryTabs;
