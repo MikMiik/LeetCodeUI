@@ -26,6 +26,12 @@
     background: var(--color-surface-secondary);
   }
 
+  &.active {
+    background: var(--color-text-primary);
+    color: white;
+    border-color: var(--color-text-primary);
+  }
+
   @media (max-width: 768px) {
     padding: 6px 12px;
     font-size: 13px;
@@ -33,7 +39,6 @@
 }
 
 .name {
-  color: var(--color-text-secondary);
   font-weight: 500;
 }
 

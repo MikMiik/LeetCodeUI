@@ -1,35 +1,34 @@
-import Icon from "../Icon";
+import PropTypes from "prop-types";
 import styles from "./TopicTags.module.scss";
+import { useGetAllTagsQuery } from "../../api/tagApi";
 
-const TopicTags = () => {
-    const topics = [
-        { name: "Array", count: 1977 },
-        { name: "String", count: 809 },
-        { name: "Hash Table", count: 722 },
-        { name: "Dynamic Programming", count: 609 },
-        { name: "Math", count: 607 },
-        { name: "Sorting", count: 467 },
-        { name: "Greedy", count: 430 },
-        { name: "Depth-First Search", count: null, expandable: true },
-    ];
+const TopicTags = ({ activeTag, setActiveTag }) => {
+  const { data: tags, isLoading, isError } = useGetAllTagsQuery();
 
-    return (
-        <div className={styles.topicTags}>
-            {topics.map((topic, index) => (
-                <div key={index} className={styles.tag}>
-                    <span className={styles.name}>{topic.name}</span>
-                    {topic.count && (
-                        <span className={styles.count}>{topic.count}</span>
-                    )}
-                    {topic.expandable && (
-                        <span className={styles.expand}>
-                            Expand <Icon name="chevron-down" size="sm" />
-                        </span>
-                    )}
-                </div>
-            ))}
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error loading tags.</div>;
+  if (!tags || tags.length === 0) return <div>No tags found.</div>;
+
+  return (
+    <div className={styles.topicTags}>
+      {tags.map((tag) => (
+        <div
+          key={tag.id}
+          className={
+            activeTag === tag.id ? `${styles.tag} ${styles.active}` : styles.tag
+          }
+          onClick={() => setActiveTag(tag.id)}
+        >
+          <span className={styles.name}>{tag.name}</span>
         </div>
-    );
+      ))}
+    </div>
+  );
+};
+
+TopicTags.propTypes = {
+  activeTag: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  setActiveTag: PropTypes.func.isRequired,
 };
 
 export default TopicTags;
