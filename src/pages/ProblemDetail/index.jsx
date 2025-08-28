@@ -303,58 +303,83 @@ const ProblemDetail = () => {
               </div>
             )}
 
-            {submissionResult ? (
+            {submissionResult || testResults.length > 0 ? (
               <div className={styles.result}>
-                <div className={styles.status}>
-                  {(() => {
-                    const { icon, color, text } = getStatusDisplay(
-                      submissionResult.result?.status
-                    );
-                    return (
-                      <div className={`${styles.statusBadge} ${styles[color]}`}>
-                        <FontAwesomeIcon icon={icon} />
-                        {text}
-                      </div>
-                    );
-                  })()}
-                </div>
+                {(() => {
+                  // Ưu tiên submissionResult, nếu không có thì lấy testResults[0]
+                  const resultObj = submissionResult
+                    ? submissionResult.result
+                    : testResults[0]?.result;
+                  const { icon, color, text } = getStatusDisplay(
+                    resultObj?.status
+                  );
+                  return (
+                    <div className={`${styles.statusBadge} ${styles[color]}`}>
+                      <FontAwesomeIcon icon={icon} />
+                      {text}
+                    </div>
+                  );
+                })()}
 
-                {submissionResult.result && submissionResult.result.stdout && (
-                  <div className={styles.output}>
-                    <h4>Output:</h4>
-                    <pre>{submissionResult.result.stdout}</pre>
-                  </div>
-                )}
+                {(() => {
+                  const resultObj = submissionResult
+                    ? submissionResult.result
+                    : testResults[0]?.result;
+                  return resultObj && resultObj.stdout ? (
+                    <div className={styles.output}>
+                      <h4>Output:</h4>
+                      <pre>{resultObj.stdout}</pre>
+                    </div>
+                  ) : null;
+                })()}
 
-                {submissionResult.result && submissionResult.result.stderr && (
-                  <div className={styles.error}>
-                    <h4>Error:</h4>
-                    <pre>{submissionResult.result.stderr}</pre>
-                  </div>
-                )}
+                {(() => {
+                  const resultObj = submissionResult
+                    ? submissionResult.result
+                    : testResults[0]?.result;
+                  return resultObj && resultObj.stderr ? (
+                    <div className={styles.error}>
+                      <h4>Error:</h4>
+                      <pre>{resultObj.stderr}</pre>
+                    </div>
+                  ) : null;
+                })()}
 
-                {submissionResult.result &&
-                  submissionResult.result.compile_output && (
+                {(() => {
+                  const resultObj = submissionResult
+                    ? submissionResult.result
+                    : testResults[0]?.result;
+                  return resultObj && resultObj.compile_output ? (
                     <div className={styles.compileError}>
                       <h4>Compilation Error:</h4>
-                      <pre>{submissionResult.result.compile_output}</pre>
+                      <pre>{resultObj.compile_output}</pre>
                     </div>
-                  )}
+                  ) : null;
+                })()}
 
                 <div className={styles.metrics}>
-                  {submissionResult.result && submissionResult.result.time && (
-                    <div className={styles.metric}>
-                      <FontAwesomeIcon icon={faClock} />
-                      <span>Time: {submissionResult.result.time}s</span>
-                    </div>
-                  )}
-                  {submissionResult.result &&
-                    submissionResult.result.memory && (
+                  {(() => {
+                    const resultObj = submissionResult
+                      ? submissionResult.result
+                      : testResults[0]?.result;
+                    return resultObj && resultObj.time ? (
+                      <div className={styles.metric}>
+                        <FontAwesomeIcon icon={faClock} />
+                        <span>Time: {resultObj.time}s</span>
+                      </div>
+                    ) : null;
+                  })()}
+                  {(() => {
+                    const resultObj = submissionResult
+                      ? submissionResult.result
+                      : testResults[0]?.result;
+                    return resultObj && resultObj.memory ? (
                       <div className={styles.metric}>
                         <FontAwesomeIcon icon={faMemory} />
-                        <span>Memory: {submissionResult.result.memory} KB</span>
+                        <span>Memory: {resultObj.memory} KB</span>
                       </div>
-                    )}
+                    ) : null;
+                  })()}
                 </div>
               </div>
             ) : (
