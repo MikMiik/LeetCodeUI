@@ -1,13 +1,15 @@
+import PropTypes from "prop-types";
 import Icon from "../Icon";
 import styles from "./ProblemItem.module.scss";
 import { Link } from "react-router-dom";
 
-// eslint-disable-next-line react/prop-types
-const ProblemItem = ({ id, title, acceptance, difficulty }) => {
+const ProblemItem = ({ id, title, difficulty, tags }) => {
   const getDifficultyClass = (diff) => {
-    if (diff === "Easy") return "easy";
-    if (diff === "Med.") return "medium";
-    if (diff === "Hard") return "hard";
+    if (!diff) return "medium";
+    const d = diff.toLowerCase();
+    if (d === "easy") return "easy";
+    if (d === "medium") return "medium";
+    if (d === "hard") return "hard";
     return "medium";
   };
 
@@ -19,7 +21,15 @@ const ProblemItem = ({ id, title, acceptance, difficulty }) => {
         <span className={styles.title}>{title}</span>
       </div>
       <div className={styles.right}>
-        <span className={styles.acceptance}>{acceptance}</span>
+        {Array.isArray(tags) && tags.length > 0 && (
+          <span className={styles.tags}>
+            {tags.map((tag) => (
+              <span key={tag.id} className={styles.tag}>
+                {tag.name}
+              </span>
+            ))}
+          </span>
+        )}
         <span
           className={`${styles.difficulty} ${
             styles[getDifficultyClass(difficulty)]
@@ -36,3 +46,15 @@ const ProblemItem = ({ id, title, acceptance, difficulty }) => {
 };
 
 export default ProblemItem;
+
+ProblemItem.propTypes = {
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  title: PropTypes.string.isRequired,
+  difficulty: PropTypes.string,
+  tags: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      name: PropTypes.string.isRequired,
+    })
+  ),
+};

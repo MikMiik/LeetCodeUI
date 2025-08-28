@@ -16,14 +16,14 @@ import {
 import Header from "../../components/Header";
 import { API_CONFIG } from "../../configs/api";
 import { useGetProblemQuery } from "../../api/problemApi";
+import { useParams } from "react-router-dom";
 import styles from "./ProblemDetail.module.scss";
 import { useGetAllLanguagesQuery } from "../../api/languagesApi";
 import { useSubmitCodeMutation } from "../../api/submissionApi";
 
-// TODO: Lấy id từ router (ví dụ: useParams nếu dùng react-router)
-const problemId = 1; // Hardcode tạm, cần thay bằng lấy từ URL
-
 const ProblemDetail = () => {
+  // Lấy id từ URL
+  const { id: problemId } = useParams();
   // Lấy dữ liệu problem từ API
   const { data: problem, isSuccess: isSuccessProblem } =
     useGetProblemQuery(problemId);
@@ -35,7 +35,6 @@ const ProblemDetail = () => {
   const [submitCode] = useSubmitCodeMutation();
   // State for selected language
   const [selectedLanguageId, setSelectedLanguageId] = useState(null);
-
   const [input, setInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
@@ -58,8 +57,21 @@ const ProblemDetail = () => {
   }, [isSuccessLanguages, languages]);
 
   // Test cases lấy từ backend nếu có, fallback []
-  const testCases = problem && problem.testCases ? problem.testCases : [];
-
+  const testCases = Array.isArray(problem?.testCases) ? problem.testCases : [];
+  React.useEffect(() => {
+    if (isSuccessProblem && problem) {
+      // Nếu template là string JSON (bị escape), parse lại
+      let tpl = problem.template;
+      if (typeof tpl === "string" && tpl.trim().startsWith('"')) {
+        try {
+          tpl = JSON.parse(tpl);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+      setCode(tpl);
+    }
+  }, [isSuccessProblem, problem]);
   // Handle test case selection
   const handleTestCaseSelect = (index) => {
     setSelectedTestCase(index);
@@ -424,7 +436,6 @@ const ProblemDetail = () => {
           <div className={styles.monacoEditorBox}>
             <MonacoEditor
               height="100%"
-              defaultLanguage="javascript"
               theme="vs-dark"
               value={code}
               onChange={(value) => setCode(value)}
