@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import MonacoEditor from "@monaco-editor/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,6 +17,8 @@ import Header from "../../components/Header";
 import { API_CONFIG } from "../../configs/api";
 import { useGetProblemQuery } from "../../api/problemApi";
 import styles from "./ProblemDetail.module.scss";
+import { useGetAllLanguagesQuery } from "../../api/languagesApi";
+import { useSubmitCodeMutation } from "../../api/submissionApi";
 
 // TODO: Lấy id từ router (ví dụ: useParams nếu dùng react-router)
 const problemId = 1; // Hardcode tạm, cần thay bằng lấy từ URL
@@ -25,9 +27,14 @@ const ProblemDetail = () => {
   // Lấy dữ liệu problem từ API
   const { data: problem, isSuccess: isSuccessProblem } =
     useGetProblemQuery(problemId);
-  const [code, setCode] = useState(
-    `// JavaScript Demo Code - Two Sum Problem\nfunction twoSum(nums, target) {\n    const map = new Map();\n    \n    for (let i = 0; i < nums.length; i++) {\n        const complement = target - nums[i];\n        \n        if (map.has(complement)) {\n            return [map.get(complement), i];\n        }\n        \n        map.set(nums[i], i);\n    }\n    \n    return [];\n}\n\n// Read input from stdin\nconst input = require('fs').readFileSync(0, 'utf8').trim().split('\\n');\nconst nums = JSON.parse(input[0]);\nconst target = parseInt(input[1]);\n\n// Execute and print result\nconst result = twoSum(nums, target);\nconsole.log(JSON.stringify(result));`
-  );
+  // Lấy danh sách ngôn ngữ từ API
+  const { data: languages, isSuccess: isSuccessLanguages } =
+    useGetAllLanguagesQuery();
+
+  const [code, setCode] = useState("");
+  const [submitCode] = useSubmitCodeMutation();
+  // State for selected language
+  const [selectedLanguageId, setSelectedLanguageId] = useState(null);
 
   const [input, setInput] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,6 +45,17 @@ const ProblemDetail = () => {
   const [testResults, setTestResults] = useState([]);
 
   const API_BASE_URL = API_CONFIG.BASE_URL;
+
+  // Set default selected language when languages are loaded
+  React.useEffect(() => {
+    if (
+      isSuccessLanguages &&
+      Array.isArray(languages) &&
+      languages.length > 0
+    ) {
+      setSelectedLanguageId(languages[0].id);
+    }
+  }, [isSuccessLanguages, languages]);
 
   // Test cases lấy từ backend nếu có, fallback []
   const testCases = problem && problem.testCases ? problem.testCases : [];
@@ -54,119 +72,81 @@ const ProblemDetail = () => {
       alert("Please enter some code to submit!");
       return;
     }
+    if (!selectedLanguageId) {
+      alert("Please select a language!");
+      return;
+    }
 
     setIsSubmitting(true);
+    setIsPolling(true);
     setTestResults([]);
 
     try {
-      const submissions = testCases.map((testCase) => ({
-        source_code: code,
-        language_id: API_CONFIG.LANGUAGES.JAVASCRIPT,
-        stdin: testCase.input,
-        expected_output: testCase.expected,
-        cpu_time_limit: 2,
-        memory_limit: 128000,
-        wall_time_limit: 5,
-      }));
-
-      const response = await fetch(`${API_BASE_URL}/submissions/batch`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          submissions: submissions,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setIsPolling(true);
-        // Poll for all test results
-        pollForBatchResults(data.data.submissions);
-      } else {
-        throw new Error(data.error?.message || "Batch submission failed");
+      // Submit code for each test case sequentially
+      const results = [];
+      for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        // Submit code with input and expected_output
+        // Parse input: extract all numbers and join with space
+        let parsedInput = testCase.input;
+        if (typeof parsedInput === "string") {
+          // Lấy tất cả số (cả số âm, số thực)
+          const nums = parsedInput.match(/-?\d+(?:\.\d+)?/g);
+          parsedInput = nums ? nums.join(" ") : parsedInput;
+        }
+        const data = await submitCode({
+          source_code: code,
+          language_id: selectedLanguageId,
+          stdin: parsedInput,
+          expected_output: testCase.expected || testCase.expected_output || "",
+        }).unwrap();
+        // Poll for result
+        let attempts = 0;
+        let resultData = null;
+        while (attempts < API_CONFIG.POLLING.MAX_ATTEMPTS) {
+          const res = await fetch(
+            `${API_BASE_URL}/submissions/${data.submission_id}`
+          );
+          const pollData = await res.json();
+          if (
+            pollData.success &&
+            pollData.data.result &&
+            pollData.data.result.status &&
+            pollData.data.result.status.id > 2
+          ) {
+            resultData = pollData.data.result;
+            break;
+          }
+          attempts++;
+          await new Promise((r) => setTimeout(r, API_CONFIG.POLLING.INTERVAL));
+        }
+        // Check result
+        let passed = false;
+        if (
+          resultData &&
+          resultData.status &&
+          resultData.status.id === 3 &&
+          resultData.stdout
+        ) {
+          passed =
+            resultData.stdout.trim() ===
+            (testCase.expected || testCase.expected_output || "").trim();
+        }
+        results.push({
+          testCase,
+          result: resultData || { message: "Execution timeout" },
+          passed,
+        });
       }
+      setTestResults(results);
+      setIsPolling(false);
     } catch (error) {
       console.error("Batch submission error:", error);
       alert(`Batch submission failed: ${error.message}`);
+      setIsPolling(false);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Poll for batch results
-  const pollForBatchResults = async (submissions) => {
-    const maxAttempts = API_CONFIG.POLLING.MAX_ATTEMPTS;
-    let attempts = 0;
-
-    const poll = async () => {
-      try {
-        const promises = submissions.map((sub) =>
-          fetch(`${API_BASE_URL}/submissions/${sub.submission_id}`)
-        );
-        const responses = await Promise.all(promises);
-        const results = await Promise.all(responses.map((res) => res.json()));
-
-        const allCompleted = results.every((result) => {
-          return (
-            result.success &&
-            result.data.result?.status &&
-            result.data.result.status.id > 2
-          );
-        });
-
-        if (allCompleted) {
-          const formattedResults = results.map((result, index) => ({
-            testCase: testCases[index],
-            result: result.data.result,
-            passed: checkTestPassed(result.data.result, testCases[index]),
-          }));
-          setTestResults(formattedResults);
-          setIsPolling(false);
-          return;
-        }
-
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(poll, API_CONFIG.POLLING.INTERVAL);
-        } else {
-          setTestResults(
-            testCases.map((testCase) => ({
-              testCase,
-              result: { message: "Execution timeout" },
-              passed: false,
-            }))
-          );
-          setIsPolling(false);
-        }
-      } catch (error) {
-        console.error("Batch polling error:", error);
-        setTestResults(
-          testCases.map((testCase) => ({
-            testCase,
-            result: { message: error.message },
-            passed: false,
-          }))
-        );
-        setIsPolling(false);
-      }
-    };
-
-    poll();
-  };
-
-  // Check if test passed
-  const checkTestPassed = (result, testCase) => {
-    if (result.status?.id !== 3) return false; // Not accepted
-    if (!result.stdout) return false;
-
-    // Clean up output and expected for comparison
-    const actualOutput = result.stdout.trim();
-    const expectedOutput = testCase.expected.trim();
-
-    return actualOutput === expectedOutput;
   };
 
   // Submit code to API (single submission)
@@ -175,90 +155,78 @@ const ProblemDetail = () => {
       alert("Please enter some code to submit!");
       return;
     }
+    if (!selectedLanguageId) {
+      alert("Please select a language!");
+      return;
+    }
 
     setIsSubmitting(true);
+    setIsPolling(true);
     setSubmissionResult(null);
     setSubmissionId(null);
+    setTestResults([]);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/submissions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          source_code: code,
-          language_id: API_CONFIG.LANGUAGES.JAVASCRIPT,
-          stdin: input,
-          cpu_time_limit: 2,
-          memory_limit: 128000,
-          wall_time_limit: 5,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSubmissionId(data.data.submission_id);
-        setIsPolling(true);
-        // Start polling for results
-        pollForResult(data.data.submission_id);
-      } else {
-        throw new Error(data.error?.message || "Submission failed");
+      // Submit code for the selected test case only
+      const testCase = testCases[selectedTestCase];
+      // Parse input: extract all numbers and join with space
+      let parsedInput = testCase.input;
+      if (typeof parsedInput === "string") {
+        const nums = parsedInput.match(/-?\d+(?:\.\d+)?/g);
+        parsedInput = nums ? nums.join(" ") : parsedInput;
       }
+      const data = await submitCode({
+        source_code: code,
+        language_id: selectedLanguageId,
+        stdin: parsedInput,
+        expected_output: testCase.expected || testCase.expected_output || "",
+      }).unwrap();
+
+      let attempts = 0;
+      let resultData = null;
+      while (attempts < API_CONFIG.POLLING.MAX_ATTEMPTS) {
+        const res = await fetch(
+          `${API_BASE_URL}/submissions/${data.submission_id}`
+        );
+        const pollData = await res.json();
+        if (
+          pollData.success &&
+          pollData.data.result &&
+          pollData.data.result.status &&
+          pollData.data.result.status.id > 2
+        ) {
+          resultData = pollData.data.result;
+          break;
+        }
+        attempts++;
+        await new Promise((r) => setTimeout(r, API_CONFIG.POLLING.INTERVAL));
+      }
+      // Check result
+      let passed = false;
+      if (
+        resultData &&
+        resultData.status &&
+        resultData.status.id === 3 &&
+        resultData.stdout
+      ) {
+        passed =
+          resultData.stdout.trim() ===
+          (testCase.expected || testCase.expected_output || "").trim();
+      }
+      setTestResults([
+        {
+          testCase,
+          result: resultData || { message: "Execution timeout" },
+          passed,
+        },
+      ]);
+      setIsPolling(false);
     } catch (error) {
       console.error("Submission error:", error);
-      alert(`Submission failed: ${error.message}`);
+      setIsPolling(false);
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Poll for submission result
-  const pollForResult = async (id) => {
-    const maxAttempts = API_CONFIG.POLLING.MAX_ATTEMPTS;
-    let attempts = 0;
-
-    const poll = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/submissions/${id}`);
-        const data = await response.json();
-
-        if (data.success) {
-          const result = data.data.result;
-
-          // Check if execution is complete
-          if (result.status && result.status.id > 2) {
-            setSubmissionResult(data.data);
-            setIsPolling(false);
-            return;
-          }
-
-          // Continue polling if not complete
-          attempts++;
-          if (attempts < maxAttempts) {
-            setTimeout(poll, API_CONFIG.POLLING.INTERVAL);
-          } else {
-            setSubmissionResult({
-              status: "timeout",
-              result: { message: "Execution timeout" },
-            });
-            setIsPolling(false);
-          }
-        } else {
-          throw new Error(data.error?.message || "Failed to get result");
-        }
-      } catch (error) {
-        console.error("Polling error:", error);
-        setSubmissionResult({
-          status: "error",
-          result: { message: error.message },
-        });
-        setIsPolling(false);
-      }
-    };
-
-    poll();
   };
 
   // Get status icon and color
@@ -351,40 +319,42 @@ const ProblemDetail = () => {
                   })()}
                 </div>
 
-                {submissionResult.result?.stdout && (
+                {submissionResult.result && submissionResult.result.stdout && (
                   <div className={styles.output}>
                     <h4>Output:</h4>
                     <pre>{submissionResult.result.stdout}</pre>
                   </div>
                 )}
 
-                {submissionResult.result?.stderr && (
+                {submissionResult.result && submissionResult.result.stderr && (
                   <div className={styles.error}>
                     <h4>Error:</h4>
                     <pre>{submissionResult.result.stderr}</pre>
                   </div>
                 )}
 
-                {submissionResult.result?.compile_output && (
-                  <div className={styles.compileError}>
-                    <h4>Compilation Error:</h4>
-                    <pre>{submissionResult.result.compile_output}</pre>
-                  </div>
-                )}
+                {submissionResult.result &&
+                  submissionResult.result.compile_output && (
+                    <div className={styles.compileError}>
+                      <h4>Compilation Error:</h4>
+                      <pre>{submissionResult.result.compile_output}</pre>
+                    </div>
+                  )}
 
                 <div className={styles.metrics}>
-                  {submissionResult.result?.time && (
+                  {submissionResult.result && submissionResult.result.time && (
                     <div className={styles.metric}>
                       <FontAwesomeIcon icon={faClock} />
                       <span>Time: {submissionResult.result.time}s</span>
                     </div>
                   )}
-                  {submissionResult.result?.memory && (
-                    <div className={styles.metric}>
-                      <FontAwesomeIcon icon={faMemory} />
-                      <span>Memory: {submissionResult.result.memory} KB</span>
-                    </div>
-                  )}
+                  {submissionResult.result &&
+                    submissionResult.result.memory && (
+                      <div className={styles.metric}>
+                        <FontAwesomeIcon icon={faMemory} />
+                        <span>Memory: {submissionResult.result.memory} KB</span>
+                      </div>
+                    )}
                 </div>
               </div>
             ) : (
@@ -411,6 +381,21 @@ const ProblemDetail = () => {
 
         <div className={styles.rightPanel}>
           {/* Monaco Editor bổ sung */}
+          <select
+            className={styles.languageSelect}
+            value={selectedLanguageId || ""}
+            onChange={(e) => setSelectedLanguageId(e.target.value)}
+          >
+            {isSuccessLanguages && Array.isArray(languages) ? (
+              languages.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.name}
+                </option>
+              ))
+            ) : (
+              <option>Loading...</option>
+            )}
+          </select>
           <div className={styles.monacoEditorBox}>
             <MonacoEditor
               height="100%"
@@ -468,7 +453,7 @@ const ProblemDetail = () => {
                   <h4>Expected Output:</h4>
                   <textarea
                     className={styles.testCaseTextarea}
-                    value={testCases[selectedTestCase].expectedOutput || ""}
+                    value={testCases[selectedTestCase].expected_output || ""}
                     readOnly
                   />
                 </div>
@@ -568,11 +553,19 @@ const ProblemDetail = () => {
                         </div>
                         <div className={styles.testExpected}>
                           <strong>Expected</strong>
-                          <pre>{testResult.testCase.expected}</pre>
+                          <pre>
+                            {testResult.testCase.expected ||
+                              testResult.testCase.expected_output ||
+                              ""}
+                          </pre>
                         </div>
                         <div className={styles.testActual}>
                           <strong>Actual</strong>
-                          <pre>{testResult.result.stdout || ""}</pre>
+                          <pre>
+                            {testResult.result && testResult.result.stdout
+                              ? testResult.result.stdout
+                              : ""}
+                          </pre>
                         </div>
                         {testResult.result.stderr && (
                           <div className={styles.testError}>

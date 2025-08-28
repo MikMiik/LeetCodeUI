@@ -1,3 +1,29 @@
+// Language select styling
+.languageSelect {
+  width: 180px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-medium);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: border 0.2s;
+  &:focus {
+    border-color: var(--color-primary);
+  }
+  /* Cố định chiều cao dropdown khi mở */
+  max-height: 40px;
+  overflow-y: auto;
+}
+
+/* Giới hạn chiều cao dropdown option khi mở (áp dụng cho Chrome, Edge, Safari) */
+.languageSelect option {
+  max-height: 32px;
+}
+
 // Box style cho Monaco Editor bên phải
 .monacoEditorBox {
   height: 100%;
