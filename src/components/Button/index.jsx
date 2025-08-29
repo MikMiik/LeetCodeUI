@@ -9,6 +9,7 @@ const Button = ({
   onClick,
   as,
   to,
+  type,
   ...props
 }) => {
   if (as === Link && to) {
@@ -26,6 +27,7 @@ const Button = ({
     <button
       className={`${styles.button} ${styles[variant]}`}
       onClick={onClick}
+      type={type}
       {...props}
     >
       {children}
@@ -39,6 +41,7 @@ Button.propTypes = {
   onClick: PropTypes.func,
   as: PropTypes.elementType,
   to: PropTypes.string,
+  type: PropTypes.string,
 };
 
 export default Button;

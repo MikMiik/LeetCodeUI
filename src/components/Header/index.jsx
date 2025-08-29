@@ -14,7 +14,6 @@ const Header = () => {
     setTheme(theme);
   };
   const currentUser = useSelector((state) => state.auth?.currentUser);
-  console.log(currentUser);
 
   // Lấy pathname để set active nav
   const pathname = window.location.pathname;

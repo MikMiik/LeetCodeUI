@@ -2,8 +2,54 @@ import styles from "./HomeMainContent.module.scss";
 import Icon from "../Icon";
 
 import Button from "../Button";
+import {
+  useCreateMessageMutation,
+  useGetAllMessagesQuery,
+} from "@/api/messageApi";
+import { useEffect, useState, useRef } from "react";
+import { useSelector } from "react-redux";
+import socketClient from "@/utils/socketClient";
 
 const HomeMainContent = () => {
+  const currentUser = useSelector((state) => state.auth?.currentUser);
+  const [createMessage] = useCreateMessageMutation();
+  const { data: messages = [], refetch } = useGetAllMessagesQuery();
+  const chatBodyRef = useRef(null);
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
+  const [message, setMessage] = useState("");
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    // Create message after ensuring conversation exists
+    try {
+      await createMessage({
+        content: message.trim(),
+        userId: currentUser.id,
+      }).unwrap();
+
+      setMessage("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
+  };
+
+  useEffect(() => {
+    const channel = socketClient.subscribe(`forum-leetcode`);
+
+    channel.bind("new-message", () => {
+      refetch();
+    });
+    return () => {
+      channel.unbind_all();
+      channel.unsubscribe();
+    };
+  }, [refetch]);
+
   return (
     <main className={styles.mainContent}>
       <section className={styles.introSection}>
@@ -35,19 +81,38 @@ const HomeMainContent = () => {
           <div className={styles.chatHeader}>
             <Icon name="comments" size="sm" /> Chat cộng đồng
           </div>
-          <div className={styles.chatBody}>
-            <div className={styles.chatPlaceholder}>
-              <Icon name="user" size="sm" /> Hãy đặt câu hỏi hoặc thảo luận cùng
-              mọi người!
-            </div>
+          <div className={styles.chatBody} ref={chatBodyRef}>
+            {messages.length === 0 ? (
+              <div className={styles.chatPlaceholder}>
+                <Icon name="user" size="sm" /> Hãy đặt câu hỏi hoặc thảo luận
+                cùng mọi người!
+              </div>
+            ) : (
+              messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={
+                    msg.userId === currentUser?.id
+                      ? styles.chatMessageRight
+                      : styles.chatMessageLeft
+                  }
+                >
+                  <span className={styles.chatUser}>
+                    {msg.user?.name || "User"}
+                  </span>
+                  <span className={styles.chatContent}>{msg.content}</span>
+                </div>
+              ))
+            )}
           </div>
-          <form className={styles.chatForm}>
+          <form className={styles.chatForm} onSubmit={handleSendMessage}>
             <input
               className={styles.chatInput}
               placeholder="Nhập câu hỏi hoặc bình luận..."
-              disabled
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
             />
-            <Button variant="primary" size="sm" disabled>
+            <Button variant="primary" size="sm" type="submit">
               Gửi
             </Button>
           </form>
