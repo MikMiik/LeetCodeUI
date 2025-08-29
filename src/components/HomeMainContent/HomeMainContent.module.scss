@@ -1,3 +1,35 @@
+/* --- DARK MODE OVERRIDES FOR MAIN SECTIONS --- */
+[data-theme='dark'] .introSection {
+  background: var(--color-background-tertiary);
+  border: 1.5px solid var(--color-border-dark);
+  box-shadow: 0 4px 24px 0 rgba(30,41,59,0.25);
+}
+[data-theme='dark'] .chatBox {
+  background: var(--color-background-tertiary);
+  border: 1.5px solid var(--color-border-dark);
+  box-shadow: 0 4px 24px 0 rgba(30,41,59,0.25);
+}
+[data-theme='dark'] .chatHeader {
+  color: var(--color-primary-400);
+  border-bottom: 1.5px solid var(--color-border-dark);
+  background: var(--color-background-tertiary);
+}
+[data-theme='dark'] .chatForm {
+  background: var(--color-background-tertiary);
+  border-top: 1.5px solid var(--color-border-dark);
+}
+[data-theme='dark'] .chatMessageLeft {
+  background: var(--color-surface-secondary);
+  color: var(--color-text-primary);
+  border: 1.5px solid var(--color-border-dark);
+  box-shadow: 0 2px 8px 0 rgba(30,41,59,0.18);
+}
+[data-theme='dark'] .chatMessageRight {
+  background: var(--color-primary-600);
+  color: var(--color-text-inverse);
+  border: 1.5px solid var(--color-primary-400);
+  box-shadow: 0 2px 8px 0 rgba(59,130,246,0.22);
+}
 .chatBody {
   min-height: 180px;
   max-height: 320px;

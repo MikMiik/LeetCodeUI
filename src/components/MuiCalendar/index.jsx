@@ -6,7 +6,7 @@ const MuiCalendar = () => {
   return (
     <div className={styles.muiCalendarWrapper}>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
-        <DateCalendar />
+        <DateCalendar sx={{}} />
       </LocalizationProvider>
     </div>
   );

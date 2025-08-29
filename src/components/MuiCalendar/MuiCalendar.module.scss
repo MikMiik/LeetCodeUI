@@ -1,3 +1,21 @@
+:global(html[data-theme='dark']) .muiCalendarWrapper {
+  background: var(--color-background-tertiary) !important;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--color-border-dark);
+  box-shadow: 0 4px 24px 0 rgba(30,41,59,0.25);
+}
+
+:global(html[data-theme='dark']) .muiCalendarWrapper .MuiDateCalendar-root {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+:global(html[data-theme='dark']) .muiCalendarWrapper .MuiPickersCalendarHeader-root {
+  background: var(--color-background-tertiary) !important;
+  color: var(--color-primary-200) !important;
+  border-radius: var(--radius-base);
+  border-bottom: 1.5px solid var(--color-border-dark);
+}
 
 // --- FINAL: OVERRIDE MUI CALENDAR DARK MODE (GLOBAL) ---
 :global(html[data-theme='dark']) {
