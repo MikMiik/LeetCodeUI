@@ -115,7 +115,7 @@ const ProblemDetail = () => {
         // Poll for result
         let attempts = 0;
         let resultData = null;
-        while (attempts < API_CONFIG.POLLING.MAX_ATTEMPTS) {
+        while (attempts < 3) {
           const res = await fetch(
             `${API_BASE_URL}/submissions/${data.submission_id}`
           );
@@ -130,19 +130,13 @@ const ProblemDetail = () => {
             break;
           }
           attempts++;
+          if (attempts >= 3) break;
           await new Promise((r) => setTimeout(r, API_CONFIG.POLLING.INTERVAL));
         }
-        // Check result
+        // Use backend's passed field
         let passed = false;
-        if (
-          resultData &&
-          resultData.status &&
-          resultData.status.id === 3 &&
-          resultData.stdout
-        ) {
-          passed =
-            resultData.stdout.trim() ===
-            (testCase.expected || testCase.expected_output || "").trim();
+        if (resultData && typeof resultData.passed === "boolean") {
+          passed = resultData.passed;
         }
         results.push({
           testCase,
@@ -196,7 +190,7 @@ const ProblemDetail = () => {
 
       let attempts = 0;
       let resultData = null;
-      while (attempts < API_CONFIG.POLLING.MAX_ATTEMPTS) {
+      while (attempts < 3) {
         const res = await fetch(
           `${API_BASE_URL}/submissions/${data.submission_id}`
         );
@@ -211,19 +205,13 @@ const ProblemDetail = () => {
           break;
         }
         attempts++;
+        if (attempts >= 3) break;
         await new Promise((r) => setTimeout(r, API_CONFIG.POLLING.INTERVAL));
       }
-      // Check result
+      // Use backend's passed field
       let passed = false;
-      if (
-        resultData &&
-        resultData.status &&
-        resultData.status.id === 3 &&
-        resultData.stdout
-      ) {
-        passed =
-          resultData.stdout.trim() ===
-          (testCase.expected || testCase.expected_output || "").trim();
+      if (resultData && typeof resultData.passed === "boolean") {
+        passed = resultData.passed;
       }
       setTestResults([
         {
@@ -585,20 +573,37 @@ const ProblemDetail = () => {
                       <div className={styles.testResultIO}>
                         <div className={styles.testInput}>
                           <strong>Input</strong>
-                          <pre>{testResult.testCase.input}</pre>
+                          <pre>
+                            {typeof testResult.testCase.input === "string"
+                              ? testResult.testCase.input.replace(/'/g, '"')
+                              : testResult.testCase.input}
+                          </pre>
                         </div>
                         <div className={styles.testExpected}>
                           <strong>Expected</strong>
                           <pre>
-                            {testResult.testCase.expected ||
+                            {typeof (
+                              testResult.testCase.expected ||
                               testResult.testCase.expected_output ||
-                              ""}
+                              ""
+                            ) === "string"
+                              ? (
+                                  testResult.testCase.expected ||
+                                  testResult.testCase.expected_output ||
+                                  ""
+                                ).replace(/'/g, '"')
+                              : testResult.testCase.expected ||
+                                testResult.testCase.expected_output ||
+                                ""}
                           </pre>
                         </div>
                         <div className={styles.testActual}>
                           <strong>Actual</strong>
                           <pre>
-                            {testResult.result && testResult.result.stdout
+                            {testResult.result &&
+                            typeof testResult.result.stdout === "string"
+                              ? testResult.result.stdout.replace(/'/g, '"')
+                              : testResult.result && testResult.result.stdout
                               ? testResult.result.stdout
                               : ""}
                           </pre>
